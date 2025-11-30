@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Terintegrasi Seleksi Mitra BPS KBB</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #435ebe;
+            --secondary-color: #57caeb;
+            --success-color: #27ae60;
+            --warning-color: #ffc107;
+            --danger-color: #e74c3c;
+            --purple-color: #8e44ad;
+            --bg-color: #f2f7ff;
+            --card-bg: #ffffff;
+            --text-dark: #25396f;
+            --text-muted: #7c8db5;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0;
+            padding-bottom: 50px;
+        }
+
+        /* --- STICKY HEADER --- */
+        .dashboard-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .header-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .header-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* --- CARDS & CONTAINERS --- */
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        .card-header-custom {
+            background-color: transparent;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 1.25rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+        }
+
+        .card-body-custom {
+            padding: 1.5rem;
+            flex-grow: 1;
+        }
+
+        /* --- KPI VALUES --- */
+        .kpi-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        /* --- SECTION DIVIDERS --- */
+        .section-title {
+            border-left: 5px solid var(--primary-color);
+            padding-left: 15px;
+            margin-bottom: 25px;
+            margin-top: 10px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .section-offline { border-color: var(--purple-color); color: var(--purple-color); }
+        .section-online { border-color: var(--success-color); color: var(--success-color); }
+
+        /* --- TABLES --- */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+        }
+        
+        .custom-table {
+            font-size: 0.9rem;
+            vertical-align: middle;
+            background: white;
+        }
+        
+        .custom-table thead th {
+            background-color: #f8f9fa;
+            color: var(--text-dark);
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .badge-score-high {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .badge-score-low {
+            background-color: #f8d7da;
+            color: #842029;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        /* --- GRADIENT CARDS --- */
+        .card-gradient-blue { background: linear-gradient(135deg, #435ebe 0%, #57caeb 100%); color: white; }
+        .card-gradient-green { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; }
+        .card-gradient-red { background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%); color: white; }
+        
+        .card-gradient-blue .kpi-label, 
+        .card-gradient-green .kpi-label, 
+        .card-gradient-red .kpi-label { color: rgba(255,255,255,0.85); }
+        
+        .card-gradient-blue .kpi-value,
+        .card-gradient-green .kpi-value,
+        .card-gradient-red .kpi-value { color: white; }
+
+        /* --- UTILS --- */
+        .text-purple { color: var(--purple-color); }
+        .text-green { color: var(--success-color); }
+        .text-blue { color: var(--primary-color); }
+    </style>
+</head>
+<body>
+
+    <!-- Header Sticky -->
+    <header class="dashboard-header">
+        <div class="container-fluid px-4">
+            <div class="row align-items-center">
+                <div class="col-md-8 text-center text-md-start">
+                    <h2 class="header-title">Dashboard Hasil Seleksi Tahap 1 dan Tahap 2 Calon Mitra Statistik Rutin</h2>
+                    <div class="header-subtitle">Badan Pusat Statistik Kabupaten Bandung Barat - Tahun 2026</div>
+                </div>
+                <div class="col-md-4 text-center text-md-end d-none d-md-block">
+                    <span class="badge bg-primary fs-6">Status: Finalisasi</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid px-4">
+        
+        <!-- BAGIAN 1: RINGKASAN EKSEKUTIF (FUNNEL) -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="section-title">Ringkasan Seleksi</h4>
+            </div>
+
+            <!-- Total Terdaftar (Data Index 1) -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card border-start border-5 border-primary">
+                    <div class="card-body-custom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="kpi-label">Total Pendaftar</div>
+                                <div class="kpi-value text-blue" id="kpiTotalDaftar">0</div>
+                            </div>
+                            <div class="fs-1 text-black-50 opacity-25">📝</div>
+                        </div>
+                        <small class="text-muted">Data Registrasi Awal</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lulus Ujian (Data Index 1) -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card border-start border-5 border-warning">
+                    <div class="card-body-custom">
+                         <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="kpi-label">Lulus Ujian Tulis</div>
+                                <div class="kpi-value text-warning" id="kpiTotalLulusUjian">0</div>
+                            </div>
+                            <div class="fs-1 text-black-50 opacity-25">💻</div>
+                        </div>
+                        <small class="text-muted">Passing Grade: 60.00</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mengikuti Wawancara (Data Index 2) -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card border-start border-5 border-info">
+                    <div class="card-body-custom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="kpi-label">Hadir Wawancara</div>
+                                <div class="kpi-value text-info">208</div>
+                            </div>
+                            <div class="fs-1 text-black-50 opacity-25">🗣️</div>
+                        </div>
+                        <small class="text-muted">Offline: 49 | Online: 159</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rekomendasi Akhir (Data Index 2) -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card card-gradient-green border-0">
+                    <div class="card-body-custom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="kpi-label text-white">Direkomendasi Akhir</div>
+                                <div class="kpi-value text-white">193</div>
+                            </div>
+                            <div class="fs-1 text-white opacity-25">✅</div>
+                        </div>
+                        <small class="text-white opacity-75">92.8% dari Peserta Wawancara</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BAGIAN 2: ANALISIS WILAYAH & POSISI (Dari INDEX 1) -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h4 class="section-title">Analisis Sebaran Wilayah & Posisi (Hasil Ujian)</h4>
+            </div>
+
+            <!-- Chart Distribusi Kecamatan -->
+            <div class="col-lg-8 mb-4">
+                <div class="stat-card">
+                    <div class="card-header-custom">Distribusi Peserta Lulus per Kecamatan</div>
+                    <div class="card-body-custom">
+                        <div id="chartDistribusiKecamatan"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Proporsi Posisi -->
+            <div class="col-lg-4 mb-4">
+                <div class="stat-card">
+                    <div class="card-header-custom">Proporsi Posisi (Job)</div>
+                    <div class="card-body-custom d-flex flex-column justify-content-center">
+                        <div id="chartProporsiPosisi"></div>
+                        <div class="text-center mt-3 small text-muted">
+                            Berdasarkan hasil seleksi administrasi & ujian
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Rentang Nilai -->
+            <div class="col-12 mb-4">
+                <div class="stat-card">
+                    <div class="card-header-custom">Analisis Rentang Nilai Ujian (Max vs Min) per Kecamatan</div>
+                    <div class="card-body-custom">
+                        <div id="chartRentangNilai"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BAGIAN 3: ANALISIS WAWANCARA (Dari INDEX 2) -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h4 class="section-title">Analisis Tahap Wawancara</h4>
+            </div>
+
+            <!-- SPLIT TAB VIEW or COLUMNS -->
+            <!-- Metode Offline -->
+            <div class="col-lg-6 mb-4">
+                <div class="stat-card h-100 border-top border-5 border-purple">
+                    <div class="card-header-custom text-purple">
+                        <span class="d-flex align-items-center gap-2">🏢 Metoda Offline (Tatap Muka)</span>
+                    </div>
+                    <div class="card-body-custom">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <div class="text-muted small">Total Diwawancara</div>
+                                    <div class="fs-2 fw-bold text-purple">49 <span class="fs-6 text-muted fw-normal">Peserta</span></div>
+                                </div>
+                                <div id="chartOfflineDecision"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-3 text-muted">Kualitas Komunikasi</h6>
+                                <div id="chartOfflineComm"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metode Online -->
+            <div class="col-lg-6 mb-4">
+                <div class="stat-card h-100 border-top border-5 border-success">
+                    <div class="card-header-custom text-green">
+                        <span class="d-flex align-items-center gap-2">🌐 Metoda Online (Zoom/GMeet)</span>
+                    </div>
+                    <div class="card-body-custom">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <div class="text-muted small">Total Diwawancara</div>
+                                    <div class="fs-2 fw-bold text-green">159 <span class="fs-6 text-muted fw-normal">Peserta</span></div>
+                                </div>
+                                <div id="chartOnlineDecision"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold mb-3 text-muted">Kualitas Komunikasi</h6>
+                                <div id="chartOnlineComm"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BAGIAN 4: DETAIL DATA (Dari INDEX 1) -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h4 class="section-title">Rekapitulasi Detail Data Seleksi</h4>
+                <div class="stat-card">
+                    <div class="card-body-custom p-0">
+                        <div class="table-container p-3">
+                            <table class="table table-hover table-bordered custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" class="align-middle">Kode Wil</th>
+                                        <th rowspan="2" class="align-middle text-start">Kecamatan</th>
+                                        <th colspan="3" class="bg-light">Alokasi Posisi</th>
+                                        <th rowspan="2" class="align-middle bg-light">Total Peserta</th>
+                                        <th colspan="2">Statistik Nilai Ujian</th>
+                                        <th colspan="2">Status Ujian</th>
+                                    </tr>
+                                    <tr style="font-size: 0.8rem;">
+                                        <th>Mix (Pend+Olah)</th>
+                                        <th>Pendataan</th>
+                                        <th>Pengolahan</th>
+                                        <th>Tertinggi</th>
+                                        <th>Terendah</th>
+                                        <th class="text-success">Lulus</th>
+                                        <th class="text-danger">Gagal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody">
+                                    <!-- JS will populate this -->
+                                </tbody>
+                                <tfoot class="table-light fw-bold" id="tableFooter">
+                                    <!-- JS will populate this -->
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="text-center text-muted mb-4 pt-4 border-top">
+            <small>&copy; 2025 Badan Pusat Statistik Kabupaten Bandung Barat - Dashboard Monitoring Terintegrasi</small>
+        </footer>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <script>
+        /** 
+         * ==========================================================
+         *  BAGIAN 1: DATA MASTER (Dari Index 1)
+         * ==========================================================
+         */
+        const dataSeleksi = [
+            { id: "3217010", kec: "Rongga", mix: 0, pend: 12, olah: 0, max: 96.67, min: 66.67, lulus: 12, gagal: 0 },
+            { id: "3217020", kec: "Gununghalu", mix: 0, pend: 8, olah: 0, max: 96.67, min: 70.00, lulus: 8, gagal: 0 },
+            { id: "3217030", kec: "Sindangkerta", mix: 0, pend: 7, olah: 0, max: 96.67, min: 70.00, lulus: 7, gagal: 0 },
+            { id: "3217040", kec: "Cililin", mix: 3, pend: 11, olah: 0, max: 96.67, min: 63.33, lulus: 14, gagal: 0 },
+            { id: "3217050", kec: "Cihampelas", mix: 3, pend: 15, olah: 0, max: 96.67, min: 63.33, lulus: 18, gagal: 0 },
+            { id: "3217060", kec: "Cipongkor", mix: 0, pend: 20, olah: 0, max: 96.67, min: 73.33, lulus: 20, gagal: 0 },
+            { id: "3217070", kec: "Batujajar", mix: 1, pend: 10, olah: 0, max: 96.67, min: 80.00, lulus: 11, gagal: 0 },
+            { id: "3217071", kec: "Saguling", mix: 1, pend: 9, olah: 0, max: 96.67, min: 60.00, lulus: 10, gagal: 0 },
+            { id: "3217080", kec: "Cipatat", mix: 8, pend: 16, olah: 1, max: 100.00, min: 76.67, lulus: 25, gagal: 0 },
+            { id: "3217090", kec: "Padalarang", mix: 6, pend: 13, olah: 7, max: 100.00, min: 40.00, lulus: 25, gagal: 1 },
+            { id: "3217100", kec: "Ngamprah", mix: 7, pend: 23, olah: 3, max: 100.00, min: 73.33, lulus: 33, gagal: 0 },
+            { id: "3217110", kec: "Parongpong", mix: 0, pend: 7, olah: 0, max: 93.33, min: 73.33, lulus: 7, gagal: 0 },
+            { id: "3217120", kec: "Lembang", mix: 0, pend: 23, olah: 0, max: 100.00, min: 70.00, lulus: 23, gagal: 0 },
+            { id: "3217130", kec: "Cisarua", mix: 1, pend: 15, olah: 0, max: 96.67, min: 60.00, lulus: 16, gagal: 0 },
+            { id: "3217140", kec: "Cikalongwetan", mix: 1, pend: 10, olah: 0, max: 93.33, min: 63.33, lulus: 11, gagal: 0 },
+            { id: "3217150", kec: "Cipeundeuy", mix: 1, pend: 14, olah: 0, max: 96.67, min: 70.00, lulus: 15, gagal: 0 }
+        ];
+
+        // --- Perhitungan Agregat ---
+        let grandTotal = 0;
+        let totalMix = 0;
+        let totalPend = 0;
+        let totalOlah = 0;
+        let totalLulus = 0;
+        
+        const tableBody = document.getElementById('tableBody');
+        const tableFooter = document.getElementById('tableFooter');
+
+        dataSeleksi.forEach(row => {
+            const rowTotal = row.mix + row.pend + row.olah; // Asumsi lulus = alokasi posisi sementara
+            const realTotal = row.lulus + row.gagal; // Total peserta sebenarnya
+            
+            grandTotal += realTotal;
+            totalMix += row.mix;
+            totalPend += row.pend;
+            totalOlah += row.olah;
+            totalLulus += row.lulus;
+
+            // Render Table Row
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="text-center text-muted">${row.id}</td>
+                <td class="text-start fw-bold">${row.kec}</td>
+                <td class="text-center">${row.mix}</td>
+                <td class="text-center">${row.pend}</td>
+                <td class="text-center">${row.olah}</td>
+                <td class="text-center bg-light fw-bold">${realTotal}</td>
+                <td class="text-center"><span class="badge-score-high">${row.max.toFixed(2)}</span></td>
+                <td class="text-center">${row.min < 60 ? `<span class="badge-score-low">${row.min.toFixed(2)}</span>` : row.min.toFixed(2)}</td>
+                <td class="text-center text-success fw-bold">${row.lulus}</td>
+                <td class="text-center ${row.gagal > 0 ? 'text-danger fw-bold' : 'text-muted'}">${row.gagal}</td>
+            `;
+            tableBody.appendChild(tr);
+        });
+
+        // Update Footer Table
+        tableFooter.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-end pe-3">TOTAL KABUPATEN</td>
+                <td class="text-center">${totalMix}</td>
+                <td class="text-center">${totalPend}</td>
+                <td class="text-center">${totalOlah}</td>
+                <td class="text-center">${grandTotal}</td>
+                <td colspan="2"></td>
+                <td class="text-center text-success">${totalLulus}</td>
+                <td class="text-center text-danger">${grandTotal - totalLulus}</td>
+            </tr>
+        `;
+
+        // Update KPI Top Cards
+        document.getElementById('kpiTotalDaftar').innerText = grandTotal;
+        document.getElementById('kpiTotalLulusUjian').innerText = totalLulus;
+
+
+        /** 
+         * ==========================================================
+         *  BAGIAN 2: CHARTS VISUALISASI
+         * ==========================================================
+         */
+
+        // 1. Chart Stacked Bar (Distribusi Kecamatan - dari File 1)
+        var optionsDistribusi = {
+            series: [{
+                name: 'Mix (Pendataan & Pengolahan)',
+                data: dataSeleksi.map(d => d.mix)
+            }, {
+                name: 'Pendataan Saja',
+                data: dataSeleksi.map(d => d.pend)
+            }, {
+                name: 'Pengolahan Saja',
+                data: dataSeleksi.map(d => d.olah)
+            }],
+            chart: {
+                type: 'bar',
+                height: 350,
+                stacked: true,
+                toolbar: { show: false },
+                fontFamily: 'Inter, sans-serif'
+            },
+            colors: ['#ffc107', '#435ebe', '#27ae60'], 
+            plotOptions: {
+                bar: { horizontal: false, borderRadius: 2, columnWidth: '60%' }
+            },
+            xaxis: {
+                categories: dataSeleksi.map(d => d.kec),
+                labels: { rotate: -45, style: { fontSize: '11px' } }
+            },
+            legend: { position: 'top' },
+            dataLabels: { enabled: false }
+        };
+        new ApexCharts(document.querySelector("#chartDistribusiKecamatan"), optionsDistribusi).render();
+
+        // 2. Chart Donut (Proporsi Posisi - dari File 1)
+        var optionsProporsi = {
+            series: [totalMix, totalPend, totalOlah],
+            labels: ['Mix (Hybrid)', 'Pendataan', 'Pengolahan'],
+            chart: {
+                type: 'donut',
+                height: 320,
+                fontFamily: 'Inter, sans-serif'
+            },
+            colors: ['#ffc107', '#435ebe', '#27ae60'],
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'Posisi',
+                                fontSize: '16px',
+                                fontWeight: 600
+                            }
+                        }
+                    }
+                }
+            },
+            legend: { position: 'bottom' }
+        };
+        new ApexCharts(document.querySelector("#chartProporsiPosisi"), optionsProporsi).render();
+
+        // 3. Chart Area (Rentang Nilai - dari File 1)
+        var optionsNilai = {
+            series: [
+                { name: 'Nilai Tertinggi', data: dataSeleksi.map(d => d.max) },
+                { name: 'Nilai Terendah', data: dataSeleksi.map(d => d.min) }
+            ],
+            chart: {
+                height: 280,
+                type: 'area',
+                toolbar: { show: false },
+                fontFamily: 'Inter, sans-serif'
+            },
+            colors: ['#20c997', '#e74c3c'],
+            dataLabels: { enabled: false },
+            stroke: { curve: 'smooth', width: 2 },
+            fill: {
+                type: 'gradient',
+                gradient: { shadeIntensity: 1, opacityFrom: 0.6, opacityTo: 0.1, stops: [0, 90, 100] }
+            },
+            xaxis: {
+                categories: dataSeleksi.map(d => d.kec),
+                labels: { rotate: -45, style: { fontSize: '11px' } }
+            },
+            yaxis: { min: 30, max: 100 }, // Adjusted min for better visual
+            tooltip: { y: { formatter: val => val.toFixed(2) } }
+        };
+        new ApexCharts(document.querySelector("#chartRentangNilai"), optionsNilai).render();
+
+
+        // --- CHARTS WAWANCARA (Dari File 2) ---
+
+        // 4. Offline Decision (Pie)
+        var optionsOfflineDec = {
+            series: [40, 9], // Data Hardcoded dari File 2
+            labels: ['Direkomendasi', 'Tidak Direkomendasi'],
+            chart: { type: 'pie', height: 200, fontFamily: 'Inter' },
+            colors: ['#8e44ad', '#95a5a6'],
+            dataLabels: { enabled: false },
+            legend: { show: false },
+            tooltip: {
+                y: { formatter: function(val) { return val + " Peserta" } }
+            }
+        };
+        new ApexCharts(document.querySelector("#chartOfflineDecision"), optionsOfflineDec).render();
+
+        // 5. Offline Communication (Bar)
+        var optionsOfflineComm = {
+            series: [{ name: 'Peserta', data: [11, 34, 4] }],
+            chart: { type: 'bar', height: 200, toolbar: { show: false }, fontFamily: 'Inter' },
+            plotOptions: { bar: { borderRadius: 4, horizontal: true, distributed: true, barHeight: '60%' } },
+            colors: ['#8e44ad', '#ba68c8', '#e1bee7'],
+            dataLabels: { enabled: true },
+            xaxis: { categories: ['Baik Sekali', 'Baik', 'Sedang'] },
+            legend: { show: false }
+        };
+        new ApexCharts(document.querySelector("#chartOfflineComm"), optionsOfflineComm).render();
+
+        // 6. Online Decision (Pie)
+        var optionsOnlineDec = {
+            series: [153, 6],
+            labels: ['Direkomendasi', 'Tidak Direkomendasi'],
+            chart: { type: 'pie', height: 200, fontFamily: 'Inter' },
+            colors: ['#27ae60', '#95a5a6'],
+            dataLabels: { enabled: false },
+            legend: { show: false },
+            tooltip: {
+                y: { formatter: function(val) { return val + " Peserta" } }
+            }
+        };
+        new ApexCharts(document.querySelector("#chartOnlineDecision"), optionsOnlineDec).render();
+
+        // 7. Online Communication (Bar)
+        var optionsOnlineComm = {
+            series: [{ name: 'Peserta', data: [13, 143, 3] }],
+            chart: { type: 'bar', height: 200, toolbar: { show: false }, fontFamily: 'Inter' },
+            plotOptions: { bar: { borderRadius: 4, horizontal: true, distributed: true, barHeight: '60%' } },
+            colors: ['#27ae60', '#57caeb', '#f39c12'],
+            dataLabels: { enabled: true },
+            xaxis: { categories: ['Baik Sekali', 'Baik', 'Sedang'] },
+            legend: { show: false }
+        };
+        new ApexCharts(document.querySelector("#chartOnlineComm"), optionsOnlineComm).render();
+
+    </script>
+</body>
+</html>
